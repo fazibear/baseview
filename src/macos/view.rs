@@ -80,10 +80,21 @@ macro_rules! add_simple_keyboard_class_method {
         extern "C" fn $sel(this: &Object, _: Sel, event: id){
             let state = unsafe { WindowState::from_view(this) };
 
+            // Only process keyboard events when the window is focused
+            let is_focused = unsafe {
+                let window: id = msg_send![this, window];
+                if window == nil {
+                    false
+                } else {
+                    let first_responder: id = msg_send![window, firstResponder];
+                    first_responder == this as *const Object as id
+                }
+            };
+
             if let Some(key_event) = state.process_native_key_event(event){
                 let status = state.trigger_event(Event::Keyboard(key_event));
 
-                if let EventStatus::Ignored = status {
+                if !is_focused && EventStatus::Ignored == status {
                     unsafe {
                         let superclass = msg_send![this, superclass];
 
