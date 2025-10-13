@@ -341,6 +341,16 @@ unsafe fn wnd_proc_inner(
             let opt_event =
                 window_state.keyboard_state.borrow_mut().process_message(hwnd, msg, wparam, lparam);
 
+            match msg {
+                WM_KEYDOWN | WM_SYSKEYDOWN => {
+                    SetCapture(hwnd);
+                }
+                WM_KEYUP | WM_SYSKEYUP => {
+                    ReleaseCapture();
+                }
+                _ => (),
+            }
+
             if let Some(event) = opt_event {
                 window_state
                     .handler
